@@ -1,0 +1,505 @@
+{% extends 'mother_tmp/personal_site_basis.html' %}
+{% load static %}
+{% block css %}{% endblock %}
+{% block content %}
+    <div class="container-fluid" style="margin-top: 90px;">
+        <div class="col-md-2">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">文章检索</h3>
+                </div>
+                <div class="panel-body" style="padding: 0 0;">
+                    <form class="navbar-form navbar-left" method="GET" style="width: 100%">
+                        <input id="keyword" name="keyword" type="text" placeholder="请输入关键词"
+                               style="width: 100%;overflow: hidden;">
+                        <button class="btn-xs btn-primary pull-right" type="submit" style="margin-top:3px;">搜索</button>
+                    </form>
+                </div>
+            </div>
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">操作</h3>
+                </div>
+                <div class="panel-body">
+                    <div><a href="{% url 'article_add' username=request.user.username %}">添加文章</a></div>
+                    <div><a style="cursor: pointer;"
+                            data-toggle="modal"
+                            data-target="#tagModal"
+                            data-whatever="添加标签" data-type="add">添加标签</a></div>
+                </div>
+            </div>
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">分类</h3>
+                </div>
+                <div class="panel-body">
+                    <div>
+                        <a data-toggle="modal" data-target="#typeModal"
+                           data-whatever="添加分类" data-type="add" style="cursor: pointer">
+                            添加分类
+                        </a>
+                    </div>
+                    <hr style="margin: 10px auto;width: 100%;border: 1px solid #2b669a">
+                    <div style="max-height: 200px;overflow-y: auto">
+                        {% for item in category_obj %}
+                            <div>
+                                <a data-name="{{ item.name }}" data-id="{{ item.id }}"
+                                   data-toggle="modal" data-target="#typeModal"
+                                   data-whatever="编辑分类" data-type="edit" style="cursor: pointer;">
+                                    {{ item.name }}
+                                </a></div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-10">
+            <div>
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active" id="show_articles">
+                        <a href="#articles"
+                           aria-controls="articles" role="tab" data-toggle="tab">
+                            文章
+                        </a>
+                    </li>
+                    <li role="presentation" id="show_comments">
+                        <a href="#comments"
+                           aria-controls="comments" role="tab" data-toggle="tab">
+                            评论
+                        </a>
+                    </li>
+                    <li role="presentation" id="show_tag">
+                        <a href="#tags"
+                           aria-controls="tags" role="tab" data-toggle="tab">
+                            标签
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="articles">
+                    <table class="table table-hover" style="width: 100%;">
+                        <thead style="width: 100%;">
+                        <tr style="width: 100%;">
+                            <th class="pull-left" style="width: 70%;">标题</th>
+                            <th class="pull-right" style="width: 8%">操作</th>
+                            <th class="pull-right" style="width: 6%">点赞</th>
+                            <th class="pull-right" style="width: 6%">评论</th>
+                            <th class="pull-right" style="width: 10%">发表时间</th>
+                        </tr>
+                        </thead>
+                        <tbody style="width: 100%;">
+                        {% for item in object_list %}
+                            <tr style="width: 100%;">
+                                <td class="pull-left" style="width: 70%;">
+                                    <a href="{% url 'article_detail' username=request.user.username article_id=item.id %}">
+                                        {{ item.title }}
+                                    </a>
+                                </td>
+                                <td class="pull-right" style="width: 8%">
+                                    <a class="btn btn-success btn-xs"
+                                       href="{% url 'article_edit' username=request.user.username %}?article_id={{ item.id }}">
+                                        <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                                    </a>
+                                    <a class="btn btn-danger btn-xs" data-toggle="modal" data-target="#deleteModal"
+                                       data-id="{{ item.id }}" data-type="article">
+                                        <i class="fa fa-trash" aria-hidden="true"></i>
+                                    </a>
+                                </td>
+                                <td class="pull-right" style="width: 6%">{{ item.up_num }}</td>
+                                <td class="pull-right" style="width: 6%">{{ item.comment_num }}</td>
+                                {% load timestrift %}
+                                <td class="pull-right" style="width: 10%">
+                                    {% time_format item.create_time %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <!--分页展示-->
+                    <div style="display:flex;justify-content: center;flex-direction: row">
+                        <nav aria-label="Page navigation" style="margin-top: 10px;margin-bottom: 20px;">
+                            <ul class="pagination">
+                                {{ page_html|safe }}
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                <div role="tabpanel" class="tab-pane" id="comments">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>文章标题</th>
+                            <th>评论内容</th>
+                            <th>发表时间</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in comment_object_list %}
+                            <tr>
+                                <td>{{ item.article.title }}</td>
+                                <td>{{ item.content }}</td>
+                                <td>{{ item.comment_time }}</td>
+                                <td>
+                                    <a class="btn btn-danger btn-xs"
+                                       data-toggle="modal"
+                                       data-target="#deleteModal"
+                                       data-id="{{ item.id }}" data-type="comment">
+                                        <i class="fa fa-trash" aria-hidden="true"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <!--评论分页展示-->
+                    <div style="display:flex;justify-content: center;flex-direction: row">
+                        <nav aria-label="Page navigation" style="margin-top: 10px;margin-bottom: 20px;">
+                            <ul class="pagination">
+                                {{ comment_page_html|safe }}
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                <div role="tabpanel" class="tab-pane" id="tags">
+                    <table class="table table-hover" style="width: 100%;">
+                        <thead style="width: 100%;">
+                        <tr style="width: 100%;">
+                            <th style="width: 60%">名称</th>
+                            <th style="width: 30%">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody style="width: 100%;">
+                        {% for item in tag_object_list %}
+                            <tr style="width: 100%;">
+                                <td style="width: 60%" id="{{ item.id }}_tag_name">{{ item.name }}</td>
+                                <td style="width: 30%">
+                                    <a class="btn btn-success btn-xs"
+                                       data-toggle="modal"
+                                       data-id="{{ item.id }}"
+                                       data-name="{{ item.name }}"
+                                       data-target="#tagModal"
+                                       data-whatever="标签重命名" data-type="edit">
+                                        <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                                    </a>
+                                    <a class="btn btn-danger btn-xs"
+                                       data-toggle="modal"
+                                       data-target="#deleteModal"
+                                       data-id="{{ item.id }}"
+                                       data-whatever="标签删除" data-type="tag">
+                                        <i class="fa fa-trash" aria-hidden="true"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <!--标签分页展示-->
+                    <div style="display:flex;justify-content: center;flex-direction: row">
+                        <nav aria-label="Page navigation" style="margin-top: 10px;margin-bottom: 20px;">
+                            <ul class="pagination">
+                                {{ tag_page_html|safe }}
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--标签增删模态框-->
+    <div class="modal fade" id="tagModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel"></h4>
+                </div>
+                <div class="modal-body">
+                    <form id="tag-form" method="POST">
+                        {% csrf_token %}
+                        <label for="request-type"></label>
+                        <input type="text" id="request-type" name="type" hidden>
+                        <label for="tag_id"></label>
+                        <input type="text" id="tag_id" name="id" hidden>
+                        {% for field in form %}
+                            <div class="form-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                <span class="error-msg" style="color: red;">{{ field.errors.0 }}</span>
+                                <span class="error-msg2" style="color: red;"></span>
+                            </div>
+                        {% endfor %}
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="tagBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--分类增删模态框-->
+    <div class="modal fade" id="typeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel"></h4>
+                </div>
+                <div class="modal-body">
+                    <form id="category-form" method="POST">
+                        {% csrf_token %}
+                        <label for="post-type"></label>
+                        <input type="text" id="post-type" name="type" hidden>
+                        <label for="type_id"></label>
+                        <input type="text" id="type_id" name="id" hidden>
+                        {% for field in category_form %}
+                            <div class="form-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                <span class="error-msg" style="color: red;"></span>
+                                <span style="color: red;"></span>
+                            </div>
+                        {% endfor %}
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="categoryBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--删除确认警告框-->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="alert alert-danger alert-dismissible fade in" role="alert">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span></button>
+                <h4>注意!</h4>
+                <span id="deleteError"></span>
+                <p>你正在进行删除操作!请确认是否删除?</p>
+                <p style="text-align: right;">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">取消
+                    </button>
+                    <button id="deleteBtn" type="button" class="btn btn-default">确定</button>
+                </p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+        $(function () {
+            initDeleteModel();
+            initaddModal();
+            showTag();
+            initAddCategoryModal();
+            //hideSearchForm();
+        });
+
+        function hideSearchForm() {
+            $("#search").addClass('hide');
+        }
+
+        function showTag() {
+            console.log(window.location.hash);
+
+            function removeActive() {
+                let $articles = $("#articles");
+                $articles.removeClass('active');
+                $("#show_articles").removeClass('active');
+                $articles.children('a').attr('aria-expanded', false);
+            }
+
+            if (window.location.hash === '#tags') {
+                removeActive();
+                let $tags = $("#show_tag");
+                $tags.addClass('active');
+                $("#tags").addClass('active');
+                $tags.children('a').attr('aria-expanded', true);
+            }
+            if (window.location.hash === '#comments') {
+                removeActive();
+                let $comments = $("#show_comments");
+                $comments.addClass('active');
+                $("#comments").addClass('active');
+                $comments.children('a').attr('aria-expanded', true);
+            }
+        }
+
+
+        //删除确认警告框
+        function initDeleteModel() {
+            $('#deleteModal').on('show.bs.modal', function (event) {
+                let button = $(event.relatedTarget);
+                let Aid = button.data('id');
+                let deleteType = button.data('type');
+                $('#deleteBtn').attr('Aid', Aid);
+                if (deleteType === 'article') {
+                    clickDeleteBtn1();
+                }
+                if (deleteType === 'tag') {
+                    clickDeleteBtn2();
+                }
+                if (deleteType === 'comment') {
+                    clickDeleteBtn3();
+                }
+            });
+
+
+            /*删除文章确认按钮事件*/
+            function clickDeleteBtn1() {
+                $('#deleteBtn').click(function () {
+                    $.ajax({
+                        url: "{% url 'article_delete' username=request.user.username %}",
+                        type: 'GET',
+                        data: {'Aid': $(this).attr('Aid')},
+                        success: function (res) {
+                            console.log(res);
+                            if (res.status) {
+                                //location.href=location.href;
+                                parent.location.reload();
+                            } else {
+                                console.log(res.error);
+                                $("#deleteError").text(res.error);
+                            }
+                        }
+                    })
+                });
+            }
+
+            /*删除标签确认按钮事件*/
+            function clickDeleteBtn2() {
+                $('#deleteBtn').click(function () {
+                    $.ajax({
+                        url: "{% url 'delete_tag' username=request.user.username %}",
+                        type: 'GET',
+                        data: {'Aid': $(this).attr('Aid')},
+                        success: function (res) {
+                            console.log(res);
+                            if (res.status) {
+                                //location.href=location.href;
+                                location.href = res.data;
+                            } else {
+                                console.log(res.error);
+                                $("#deleteError").text(res.error)
+                            }
+                        }
+                    })
+                });
+            }
+
+            /*删除评论确认按钮事件*/
+            function clickDeleteBtn3() {
+                $('#deleteBtn').click(function () {
+                    $.ajax({
+                        url: "{% url 'delete_comment' username=request.user.username %}",
+                        type: 'GET',
+                        data: {'Aid': $(this).attr('Aid')},
+                        success: function (res) {
+                            console.log(res);
+                            if (res.status) {
+                                //location.href=location.href;
+                                location.href = res.data;
+                            } else {
+                                console.log(res.error);
+                                $("#deleteError").text(res.error)
+                            }
+                        }
+                    })
+                });
+            }
+        }
+
+        /*弹出面板*/
+        //初始化新建标签对话框
+        function initaddModal() {
+            $('#tagModal').on('show.bs.modal', function (event) {
+                let button = $(event.relatedTarget);
+                let recipient = button.data('whatever');
+                let requestType = button.data('type');
+                let name = button.data('name');
+                let tagId = button.data('id');
+                let modal = $(this);
+                modal.find('.modal-title').text(recipient);
+                modal.find('.error-msg').empty();
+                modal.find('.error-msg2').empty();
+                $('#tag-form')[0].reset();
+                modal.find('#request-type').attr('value', requestType);
+                if (tagId) {
+                    //重命名
+                    modal.find('#id_name').val(name);//form字段命名格式id_+*
+                    modal.find('#tag_id').val(tagId);
+                }
+                $("#tagBtn").click(function () {
+                    $.ajax({
+                        url: "{% url 'add_tag' username=request.user.username %}",
+                        type: 'POST',
+                        data: $('#tag-form').serialize(),
+                        dataType: 'JSON',
+                        success: function (res) {
+                            if (res.status) {
+                                location.href = res.data;
+                                location.reload();
+                            } else {
+                                modal.find('.error-msg2').text(res.error);
+                                $.each(res.form_errors, function (key, value) {
+                                    $("#id_" + key).next().text(value[0]);
+                                })
+                            }
+                        }
+                    })
+                })
+            });
+        }
+
+        //初始化新建分类对话框
+        function initAddCategoryModal() {
+            $('#typeModal').on('show.bs.modal', function (event) {
+                let button = $(event.relatedTarget);
+                let recipient = button.data('whatever');
+                let requestType = button.data('type');
+                let name = button.data('name');
+                let typeId = button.data('id');
+                let modal = $(this);
+                modal.find('.modal-title').text(recipient);
+                modal.find('.error-msg').empty();
+                modal.find('.error-msg2').empty();
+                $('#category-form')[0].reset();
+                modal.find('#post-type').attr('value', requestType);
+                if (typeId) {
+                    //重命名
+                    modal.find('#id_name').val(name);//form字段命名格式id_+*
+                    modal.find('#type_id').val(typeId);
+                }
+                $("#categoryBtn").click(function () {
+                    $.ajax({
+                        url: "{% url 'add_category' username=request.user.username %}",
+                        type: 'POST',
+                        data: $('#category-form').serialize(),
+                        dataType: 'JSON',
+                        success: function (res) {
+                            if (res.status) {
+                                console.log(res.status);
+                                location.href = res.data;
+                                //location.reload();
+                            } else {
+                                console.log(res);
+                                modal.find('.error-msg').text(res.error);
+                                if (res.error1) {
+                                    modal.find('.error-msg').next().text(res.error1)
+                                }
+                            }
+                        }
+                    })
+                })
+            });
+        }
+    </script>
+{% endblock %}

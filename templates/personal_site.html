@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ user_obj.blog.title }}</title>
+    <link rel="stylesheet" href="{% static 'plugins/bootstrap-3.3.7-dist/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static '/plugins/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <style>
+
+        a:hover {
+            text-decoration: none;
+        }
+
+        .article-userinfo span {
+            margin-right: 2%;
+        }
+
+        .article-userinfo {
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-inverse navbar-fixed-top" style="background-color: #2b669a;">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand font_white" href="">{{ user_obj.blog.name }}</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li><a href="#">博客</a></li>
+                <li><a href="#">文章</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                       aria-expanded="false">更多<span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Action</a></li>
+                        <li><a href="#">Another action</a></li>
+                        <li><a href="#">Something else here</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="#">Separated link</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="#">One more separated link</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                {% if not request.user.is_authenticated %}
+                    <li><a href="{% url 'login' %}">登录</a></li>
+                    <li><a href="{% url 'register' %}">注册</a></li>
+                {% else %}
+                    <li><img src="/file/{{ request.user.avatar }}" alt="头像"
+                             style="height: 50px;width: 50px;border-radius: 25px;"></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false">
+                            {{ request.user.username }} <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="">更换头像</a></li>
+                            <li><a data-toggle="modal" data-target="#myModal">密码重置</a></li>
+                            <li><a href="">设置</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="{% url 'logout' %}">退出登录</a></li>
+                        </ul>
+                    </li>
+                {% endif %}
+            </ul>
+        </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+</nav>
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabel">密码重置</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 8px;display: block;">
+                    <label for="username">
+                        用户名<input type="text" disabled class="form-control"
+                                  value="{{ request.user.username }}"></label>
+                </div>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label for="old_password">原密码</label>
+                    <input type="password" id="old_password" class="form-control">
+                    <div style="color: red;height: 20px;font-size: 14px;" id="error"></div>
+                </div>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label for="new_password">新密码</label>
+                    <input type="password" id="new_password" class="form-control">
+                </div>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label for="confirm_password">确认密码</label>
+                    <input type="password" id="confirm_password" class="form-control">
+                    <div style="color: red;height: 20px;font-size: 14px;" id="confirm_error"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="id_alter">确认</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container-fluid" style="margin-top: 70px;">
+    <div class="col-md-2">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">文章分类</h3>
+            </div>
+            <div class="panel-body">
+                Panel content
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">文章标签</h3>
+            </div>
+            <div class="panel-body">
+                Panel content
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">日期归档</h3>
+            </div>
+            <div class="panel-body">
+                Panel content
+            </div>
+        </div>
+    </div>
+    <div class="col-md-10">
+        {% for item in article_obj %}
+            <ul class="media-list" style="margin-bottom: 25px;">
+                <li><h4 class="media-heading"><a href="">{{ item.title }}</a></h4></li>
+                <li class="media">
+                    <div class="media-left">
+                        <a href="#">
+                            <img class="media-object" src="/file/{{ item.blog.user.avatar }}" alt="用户头像"
+                                 style="width: 80px;height: 80px;">
+                        </a>
+                    </div>
+                    <div class="media-body">
+                        {{ item.desc }}
+                    </div>
+                    <div class="article-userinfo">
+                        <span>发布于</span>
+                        <span>@</span>
+                        <span>{{ item.create_time }}</span>
+                        <span>{{ item.blog.user.username }}</span>
+                        <span>
+                            <i class="fa fa-commenting-o" aria-hidden="true"></i>评论({{ item.comment_num }})
+                            </span>
+                        <span>
+                            <i class="fa fa-thumbs-o-down" aria-hidden="true"></i>踩({{ item.down_num }})
+                            </span>
+                        <span>
+                            <i class="fa fa-thumbs-o-up" aria-hidden="true"></i>赞({{ item.up_num }})
+                            </span>
+                    </div>
+                </li>
+            </ul>
+        {% endfor %}
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,190 @@
+{% extends 'mother_tmp/basic.html' %}
+{% load static %}
+{% block title %}随缘空间--首页{% endblock %}
+{% block css %}
+    <style>
+        a:hover {
+            cursor: pointer;
+        }
+
+        .article-userinfo span {
+            margin-right: 3%;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="container-fluid" style="margin-top: 90px;">
+        <div class="col-md-3">
+            <div class="panel panel-danger">
+                <div class="panel-heading">
+                    <h3 class="panel-title">热门文章 Top10</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-hover">
+                        {% for item in hot_article_obj %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'article_detail' username=item.blog.user.username article_id=item.id %}">
+                                        {{ item.title|slice:"14" }}{% if item.title|length > 14 %}... {% endif %}
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            {% for item in object_list %}
+                <ul class="media-list" style="margin-bottom: 25px;">
+                    <li>
+                        <h4 class="media-heading">
+                            <a href="{% url 'article_detail' username=item.blog.user.username article_id=item.id %}">
+                                {{ item.title }}
+                            </a>
+                        </h4>
+                    </li>
+                    <li class="media">
+                        <div class="media-left">
+                            <a href="#">
+                                <img class="media-object" src="/file/{{ item.blog.user.avatar }}/" alt="用户头像"
+                                     style="width: 80px;height: 80px;">
+                            </a>
+                        </div>
+                        <div class="media-body">
+                            {{ item.desc }}
+                        </div>
+                        <div class="article-userinfo">
+                            <span>
+                                <a href="{% url 'site' username=item.blog.user.username %}" style="font-size: 16px;">
+                                    {{ item.blog.user.username }}
+                                </a>
+                            </span>
+                            发布于
+                            <span>{{ item.create_time }}</span>
+                            <span>
+                                <a href="{% url 'article_detail' username=item.blog.user.username article_id=item.id %}?comment=true">
+                                    <i class="fa fa-commenting-o" aria-hidden="true"></i>评论({{ item.comment_num }})
+                                </a>
+                            </span>
+                            <span>
+                                <a class="downBtn" id="{{ item.id }}">
+                                    <i class="fa fa-thumbs-o-down" aria-hidden="true"></i>踩({{ item.down_num }})
+                                </a>
+                            </span>
+                            <span>
+                                <a class="upBtn" id="{{ item.id }}">
+                                    <i class="fa fa-thumbs-o-up" aria-hidden="true"></i>赞({{ item.up_num }})
+                                </a>
+                            </span>
+                            <span>
+                                <a href="{% url 'article_detail' username=item.blog.user.username article_id=item.id %}">
+                                    <i class="fa fa-eye" aria-hidden="true"></i>浏览量({{ item.views_num }})
+                                </a>
+                            </span>
+                            <span class="error-msg" style="color: red;"></span>
+                        </div>
+                    </li>
+                </ul>
+            {% endfor %}
+            <!--分页展示-->
+            <div style="display:flex;justify-content: center;flex-direction: row">
+                <nav aria-label="Page navigation" style="margin-top: 10px;margin-bottom: 20px;">
+                    <ul class="pagination">
+                        {{ page_html|safe }}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">推荐阅读 Top10</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-hover">
+                        {% for item in recommend_article_obj %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'article_detail' username=item.blog.user.username article_id=item.id %}">
+                                        {{ item.title|slice:"20" }}{% if item.title|length > 20 %}... {% endif %}
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+        $(function () {
+            downBtnClick();
+            upBtnClick();
+        });
+
+        //点踩
+        function downBtnClick() {
+            $(".downBtn").click(function (e) {
+                $(this).parent().siblings('.error-msg').empty();
+                let Aid = $(this).attr('id');
+                console.log(Aid);
+                $.ajax({
+                    url: "{% url 'up_down'%}",
+                    type: 'POST',
+                    data: {'up': 0, 'article_id': Aid},
+                    success: function (res) {
+                        if (res.status) {
+                            if (res.login) {
+                                location.href = res.url;
+                            } else {
+                                location.reload();
+                            }
+                        } else {
+                            //console.log(res.error);
+                            $(e.target).parent().siblings('.error-msg').text(res.error);
+                            //console.log($(e.target).parent().siblings('.error-msg').text());
+                            let timeCount1 = setTimeout(function () {
+                                $('.error-msg').empty();
+                                clearTimeout(timeCount1)
+                            }, 30000)
+                        }
+                    }
+                })
+            });
+        }
+
+        //点赞
+        function upBtnClick() {
+            $(".upBtn").click(function (e) {
+                $(this).parent().siblings('.error-msg').empty();
+                let Aid = $(this).attr('id');
+                console.log(Aid);
+                $.ajax({
+                    url: "{% url 'up_down'%}",
+                    type: 'POST',
+                    data: {'up': 1, 'article_id': Aid},
+                    success: function (res) {
+                        if (res.status) {
+                            if (res.login) {
+                                location.href = res.url;
+                            } else {
+                                location.reload();
+                            }
+                        } else {
+                            //console.log(res.error);
+                            $(e.target).parent().siblings('.error-msg').text(res.error);
+                            //console.log($(e.target).parent().siblings('.error-msg').text());
+                            let timeCount1 = setTimeout(function () {
+                                $('.error-msg').empty();
+                                clearTimeout(timeCount1)
+                            }, 5000)
+                        }
+                    }
+                })
+            });
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'mother_tmp/personal_site_basis.html' %}
+{% load static %}
+{% block css %}
+    <style>
+        a:hover {
+            text-decoration: none;
+        }
+
+        .article-userinfo span {
+            margin-right: 1.5%;
+        }
+
+        .article-userinfo {
+            text-align: right;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="container-fluid" style="margin-top: 70px;">
+        <div class="col-md-2">
+            {% load my_tag %}
+            {% left_menu user_obj.username %}
+        </div>
+        <div class="col-md-10">
+            {% for item in object_list %}
+                <ul class="media-list" style="margin-bottom: 25px;">
+                    <li>
+                        <h4 class="media-heading">
+                            <a href="{% url 'article_detail' username=user_obj.username article_id=item.id %}">
+                                {{ item.title }}
+                            </a>
+                        </h4>
+                    </li>
+                    <li class="media">
+                        <div class="media-left">
+                            <a href="#">
+                                <img class="media-object" src="/file/{{ item.blog.user.avatar }}" alt="用户头像"
+                                     style="width: 80px;height: 80px;">
+                            </a>
+                        </div>
+                        <div class="media-body">
+                            {{ item.desc }}
+                        </div>
+                        <div class="article-userinfo">
+                            <span>发布于</span>
+                            <span>@</span>
+                            <span>{{ item.create_time }}</span>
+                            <span>{{ item.blog.user.username }}</span>
+                            <span>
+                            <i class="fa fa-commenting-o" aria-hidden="true"></i>评论({{ item.comment_num }})
+                            </span>
+                            <span>
+                                <i class="fa fa-eye" aria-hidden="true"></i>浏览量({{ item.views_num }})
+                            </span>
+                            <span>
+                            <i class="fa fa-thumbs-o-down" aria-hidden="true"></i>踩({{ item.down_num }})
+                            </span>
+                            <span>
+                            <i class="fa fa-thumbs-o-up" aria-hidden="true"></i>赞({{ item.up_num }})
+                            </span>
+                            <span>
+                                <a href="
+{% url 'article_edit' username=request.user.username %}?article_id={{ item.id }}"
+                                   class="article-edit">
+                                    <i class="fa fa-pencil-square-o" aria-hidden="true"></i>编辑
+                                </a>
+                            </span>
+                        </div>
+                    </li>
+                </ul>
+            {% endfor %}
+            <!--分页展示-->
+            <div style="display:flex;justify-content: center;flex-direction: row">
+                <nav aria-label="Page navigation" style="margin-top: 10px;margin-bottom: 20px;">
+                    <ul class="pagination">
+                        {{ page_html|safe }}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(function () {
+
+        });
+
+    </script>
+{% endblock %}

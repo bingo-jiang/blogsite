@@ -1,0 +1,333 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ user_obj.blog.title }}</title>
+    <link rel="stylesheet" href="{% static 'plugins/bootstrap-3.3.7-dist/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static '/plugins/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <style>
+        .nav .open > a, .nav .open > a:focus, .nav .open > a:hover {
+            background-color: #2b669a;
+        }
+
+        .navbar .container-fluid .collapse .nav .dropdown #more:focus {
+            color: white;
+            background-color: #2b669a;
+        }
+
+        .navbar .container-fluid .collapse .nav .dropdown .dropdown-menu li a {
+            color: black;
+        }
+
+        .navbar .container-fluid .collapse .nav li a {
+            color: white;
+        }
+
+        .navbar .container-fluid .collapse .nav li a:hover {
+            color: white;
+            background-color: #00a8c6;
+        }
+
+        .navbar .container-fluid .navbar-header a {
+            color: white;
+        }
+
+        .navbar .container-fluid .navbar-header a:hover {
+            color: white;
+            background-color: #00a8c6;
+
+        }
+
+        .nav > li > a:focus {
+            background-color: #2b669a;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: none;
+        }
+
+        .beian a {
+            text-decoration: none;
+        }
+
+        .beian a:hover {
+            text-decoration: none;
+            color: #2b669a;
+        }
+    </style>
+    {% block css %}{% endblock %}
+</head>
+<body>
+<nav class="navbar navbar-fixed-top" style="background-color: #2b669a;">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand font_white" href="{% url 'home' %}">随缘空间</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li><a href="{% url 'home' %}">首页</a></li>
+                <li>
+                    <a href="{% if request.user.is_authenticated %}
+{% url 'site' username=request.user.username %}{% else %}{% url 'login' %}{% endif %}">
+                        博客
+                    </a>
+                </li>
+                <li>
+                    <a href="{% if request.user.is_authenticated %}
+{% url 'manage' username=request.user.username %}{% else %}{% url 'login' %}{% endif %}">
+                        文章
+                    </a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <form class="navbar-form navbar-left" method="GET" id="search">
+                    <div class="form-group">
+                        <input id="keyword" name="keyword" type="text" class="form-control" placeholder="请输入关键词">
+                    </div>
+                    <button class="btn btn-default" type="submit">搜索</button>
+                </form>
+                {% if not request.user.is_authenticated %}
+                    <li><a href="{% url 'login' %}">登录</a></li>
+                    <li><a href="{% url 'register' %}">注册</a></li>
+                {% else %}
+                    <li style="margin-right: 0;">
+                        <a href="{% url 'article_add' username=request.user.username %}">
+                            <i class="fa fa-pencil" aria-hidden="true"></i>写作
+                        </a>
+                    </li>
+                    <li style="margin-right: 30px;">
+                        <a href="{% url 'manage' username=request.user.username %}">
+                            <i class="fa fa-lock" aria-hidden="true"></i>管理
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'file' path=request.user.avatar %}" style="padding: 0;">
+                            <img src="/file/{{ request.user.avatar }}" alt="头像"
+                                 style="height: 50px;width: 50px;border-radius: 25px;">
+                        </a>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false">
+                            {{ request.user.username }} <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{% url 'site' username=request.user.username %}">我的博客</a></li>
+                            <li><a data-toggle="modal" data-target="#infoModal">信息修改</a></li>
+                            <li><a data-toggle="modal" data-target="#myModal">密码重置</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="{% url 'logout' %}">退出登录</a></li>
+                        </ul>
+                    </li>
+                {% endif %}
+            </ul>
+        </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+</nav>
+{% if request.user.is_authenticated %}
+    <!-- 用户信息Modal -->
+    <div class="modal fade" id="infoModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">信息修改</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="infoForm" novalidate>
+                        <div class="form-group" style="text-align: center;">
+                            <label for="avatarImg">头像
+                                <img src="/file/{{ request.user.avatar }}" alt="默认头像"
+                                     style="width: 80px;height: 80px;margin: 0 auto;" id="user_img">
+                            </label>
+                            <input type="file" id="avatarImg" name="avatar" style="display: none;">
+                            <span style="color: red;">{{ field.errors.0 }}</span>
+                        </div>
+                        {% for field in userform %}
+                            <div class="form-group" style="margin-bottom: 8px;">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                <div style="color: red;height: 20px;font-size: 14px;"></div>
+                            </div>
+                        {% endfor %}
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="info_alter">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabel">密码重置</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 8px;display: block;">
+                    <label for="username">
+                        用户名<input type="text" disabled class="form-control"
+                                  value="{{ request.user.username }}"></label>
+                </div>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label for="old_password">原密码</label>
+                    <input type="password" id="old_password" class="form-control">
+                    <div style="color: red;height: 20px;font-size: 14px;" id="error"></div>
+                </div>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label for="new_password">新密码</label>
+                    <input type="password" id="new_password" class="form-control">
+                </div>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label for="confirm_password">确认密码</label>
+                    <input type="password" id="confirm_password" class="form-control">
+                    <div style="color: red;height: 20px;font-size: 14px;" id="confirm_error"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="id_alter">确认</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block content %}{% endblock %}
+{#<div align=center style="cursor: pointer;margin-bottom: 30px;" class="beian">#}
+{#    <a href="http://beian.miit.gov.cn/" target=_blank style="color: #a6a6a6">粤ICP备2021080545号</a>#}
+{#</div>#}
+<div style="width: auto;">
+    <div style="text-align:center; padding:20px 0;margin-bottom: 20px;">
+        <a href="http://beian.miit.gov.cn/" target=_blank>
+            <p style="height:20px;line-height:20px;margin: 0 0 0 5px; color:#939393;font-size: 14px;">
+                粤ICP备 2021080545号
+            </p>
+        </a>
+        <a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=44011302003075"
+           style="display:inline-block;text-decoration:none;height:20px;line-height:20px;">
+            <img src="{% static 'img/gonganbeian.png' %}" style="float:left;" alt="备案编号图标"/>
+            <p style="float:left;height:20px;line-height:20px;margin: 0 0 0 5px; color:#939393;font-size: 14px;">
+                粤公网安备 44011302003075号
+            </p>
+        </a>
+    </div>
+</div>
+<script src="{% static 'plugins/jQuery/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-3.3.7-dist/js/bootstrap.min.js' %}"></script>
+<script>
+    $(function () {
+        idAlterClick();
+        userInfoChange();
+    });
+
+    function idAlterClick() {
+        $("#id_alter").click(function () {
+            $.ajax({
+                url: "{% url 'set_password' %}",
+                data: {
+                    'old_password': $("#old_password").val(),
+                    'new_password': $("#new_password").val(),
+                    'confirm_password': $("#confirm_password").val(),
+                },
+                type: 'POST',
+                dataType: 'JSON',
+                success: function (res) {
+                    if (res.status) {//成功
+                        location.href = res.data;
+                    } else {//失败
+                        if (res.error) {
+                            $("#error").text(res.error);
+                        } else {
+                            $("#confirm_error").text(res.confirm_error);
+                        }
+                    }
+                }
+            })
+        });
+    }
+
+    function searchBtnClick() {
+        $("#searchBtn").click(function () {
+            $.ajax({
+                url: "{% url 'home' %}",
+                data: {'keyword': $("#keyword").val()},
+                type: 'GET',
+                dataType: 'JSON',
+                success: function (res) {
+                    if (res.status) {//成功
+                        location.href = res.data;
+                    } else {//失败
+                        console.log(res.error);
+                    }
+                }
+            })
+        });
+    }
+
+    function userInfoChange() {
+        var tag = 0;
+        //头像预览
+        $("#avatarImg").change(function () {
+            tag = 1;
+            //利用文件阅读器对象(内置)完成头像的预览
+            //1.生成一个文件阅读器对象
+            let fileReaderObj = new FileReader();
+            //2.获取用户上传的文件
+            let fileObj = $(this)[0].files[0];
+            //3.将文件对象给文件阅读器对象
+            fileReaderObj.readAsDataURL(fileObj);
+            //4.利用阅读器将文件展示到前端(修改src属性）,需要等图片加载才执行，onload
+            fileReaderObj.onload = function () {
+                $("#user_img").attr('src', fileReaderObj.result)
+            }
+        });
+        //修改按钮
+        $("#info_alter").click(function () {
+            //因为包含文件对象，new一个formData
+            let formDataObj = new FormData();
+            //1.添加普通数据的键值对；
+            $.each($("#infoForm").serializeArray(), function (index, obj) {
+                console.log(index, obj);
+                formDataObj.append(obj.name, obj.value);
+            });
+            formDataObj.append('avatar', $('#avatarImg')[0].files[0]);
+            console.log(formDataObj.get('avatar'), formDataObj.get('username'));
+            $.ajax({
+                url: "{% url 'userinfo_alter' %}",
+                data: formDataObj,
+                type: 'POST',
+                //需要指定一下两个关键参数，否则会报错
+                contentType: false,
+                processData: false,
+
+                dataType: 'JSON',
+                success: function (res) {
+                    if (res.status) {//成功
+                        location.reload();
+                        console.log(res);
+                    } else {//失败
+                        console.log(res.error);
+                        $.each(res.error, function (key, value) {
+                            let $input = $("#id_" + key);
+                            $input.next().text(value[0]);
+                            $input.parent().addClass('has-error');
+                        });
+                    }
+                }
+            })
+        });
+    }
+</script>
+{% block js %}{% endblock %}
+</body>
+</html>

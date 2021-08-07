@@ -1,0 +1,370 @@
+{% extends 'mother_tmp/personal_site_basis.html' %}
+{% load static %}
+{% block css %}
+    <style>
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .topfixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 9000;
+        }
+
+        body {
+            background-color: #a6a6a6;
+        }
+
+
+        a:hover {
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .article-userinfo span {
+            margin-right: 1.5%;
+        }
+
+        .article-userinfo {
+            text-align: right;
+        }
+
+        #article-content {
+            border: 1px solid #E0F2BE;
+            border-radius: 5px;
+            background-color: white;
+        }
+
+        #article-footer span {
+            margin-right: 15px;
+        }
+
+        #comment {
+            border: 1px solid #E0F2BE;
+            border-radius: 5px;
+            background-color: white;
+            margin-top: 30px;
+        }
+
+        .comment-area .item {
+            margin-top: 20px;
+        }
+
+        .comment-area .right-info {
+            padding-left: 35px;
+        }
+
+        .comment-area .right-info .desc span {
+            margin: 0 20px;
+            color: #8c8c8c;
+        }
+
+        .comment-area .child {
+            padding-left: 55px;
+        }
+
+        .comment-area .error-msg {
+            color: red;
+        }
+
+        .comment-area .reply-user {
+            display: inline-block;
+            background-color: #ddd;
+            color: black;
+            padding: 6px 8px;
+            margin-left: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="container-fluid" style="margin-top: 70px;">
+        <div class="col-md-3" id="left-nav">
+            {% load my_tag %}
+            {% left_menu user_obj.username %}
+        </div>
+        <div class="col-md-9" id="article-content" style="padding: 30px 50px;">
+            <div id="article-content-inner-div">
+                <div>
+                    <h2 style="color: #4b88a6;text-align: center;">{{ article_obj.title }}</h2>
+                    {% if request.user.username == article_obj.blog.user.username %}
+                        <a href="{% url 'article_edit' username=request.user.username %}?article_id={{ article_obj.id }}"
+                           class="btn btn-success pull-right">
+                            编辑
+                        </a>
+                    {% endif %}
+                </div>
+                <div style="text-align: center;color: #a6a6a6;font-size: 16px;">作者:{{ article_obj.blog.user.username }}</div>
+                <div id="article_content" style="margin-top: 15px;">{{ article_obj.content|safe }}</div>
+                <hr/>
+                <div>分类:{{ article_obj.category.name }}</div>
+                <div>标签:{% for item in tag_obj %}{{ item.tag.name }};{% endfor %}</div>
+                <div class="pull-right" id="article-footer">
+                    <span class="error-msg-up-down" style="color: red;"></span>
+                    <span>{{ article_obj.create_time }}</span>
+                    <span>
+                        <i class="fa fa-eye" aria-hidden="true"></i>浏览量({{ article_obj.views_num }})
+                    </span>
+                    <span>
+                        <a href="">
+                            <i class="fa fa-commenting-o" aria-hidden="true"></i>评论({{ article_obj.comment_num }})
+                        </a>
+                    </span>
+                    <span>
+                        <a class="downBtn" id="{{ article_obj.id }}">
+                            <i class="fa fa-thumbs-o-down" aria-hidden="true"></i>踩({{ article_obj.down_num }})
+                        </a>
+                    </span>
+                    <span>
+                        <a class="upBtn" id="{{ article_obj.id }}">
+                            <i class="fa fa-thumbs-o-up" aria-hidden="true"></i>赞({{ article_obj.up_num }})
+                        </a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-9" id="comment">
+            <div style="margin: 50px 50px;">
+                <div>评论:</div>
+                <div class="comment-list">
+                    <!--放置记录、评论模板-->
+                </div>
+                <hr/>
+                <div class="comment-text" id="commentText">
+                    <div class="form-group">
+                            <textarea id="content" rows="6" class="form-control"
+                                      placeholder="请输入要评论的内容"></textarea>
+                        <span class="error-msg" style="color: red;"></span>
+                    </div>
+                    <input class="btn btn-primary pull-right" type="button" id="btnReplySubmit" value="提 交">
+
+                    <div class="reply-user hide" id="replyUser">
+                        回复 <span></span>
+                        <i class="fa fa-times-circle" aria-hidden="true" style="color: #9d9d9d;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12" style="height: 30px;"></div>
+        <!--评论模板-->
+        <div id="conmentTemplate" class="hide">
+            <div class="item clearfix" style="margin: 20px auto;border: 1px solid #a6a6a6;border-radius: 5px;">
+                <div class="comment-info" style="margin: 15px 15px;">
+                    <div class="desc row">
+                        <p class="col-xs-1"><span class="range-num"></span></p>
+                        <p class="col-xs-3">用户:<span class="user"></span></p>
+                        <p class="col-xs-5">发表时间:<span class="comment-time"></span></p>
+                        <p class="col-xs-3"></p>
+                    </div>
+                    <pre></pre>
+                    <a href="#commentText" class="reply pull-right">
+                        <i class="fa fa-commenting-o" aria-hidden="true"></i> 回复
+                    </a>
+                    <div style="height: 15px;"></div>
+                </div>
+                <div class="child" style="margin-left: 2px;"></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+        let COMMENT_URL = "{% url 'comment' username=username article_id=article_obj.id %}";
+        $(function () {
+            initResponse();
+            bindRelyBtn();
+            bindCancelReplyUser();
+            bindBtnSubmit();
+            adjustPictureSize();
+            {% if comment %}
+                turnToComment();
+            {% endif %}
+            //fixLeftNav();
+            downBtnClick();
+            upBtnClick();
+        });
+
+        //点踩
+        function downBtnClick() {
+            $(".downBtn").click(function (e) {
+                {% if not request.user.is_authenticated %}
+                    location.href='/login/';
+                {% else %}
+                $(e.target).parent().siblings('.error-msg-up-down').empty();
+                let Aid = $(e.target).attr('id');
+                $.ajax({
+                    url: "{% url 'up_down'%}",
+                    type: 'GET',
+                    data: {'up': 0, 'article_id': Aid},
+                    success: function (res) {
+                        if (res.status) {
+                            location.reload();
+                        } else {
+                            console.log(res.error);
+                            $(e.target).parent().siblings('.error-msg-up-down').text(res.error);
+                            let timeCount1 = setTimeout(function () {
+                                $('.error-msg-up-down').empty();
+                                clearTimeout(timeCount1)
+                            }, 3000)
+
+                        }
+                    }
+                });
+                {% endif %}
+            });
+        }
+
+        //点赞
+        function upBtnClick() {
+            $(".upBtn").click(function (e) {
+                {% if not request.user.is_authenticated %}
+                    location.href='/login/';
+                {% else %}
+                $(e.target).parent().siblings('.error-msg-up-down').empty();
+                let Aid = $(e.target).attr('id');
+                $.ajax({
+                    url: "{% url 'up_down'%}",
+                    type: 'GET',
+                    data: {'up': 1, 'article_id': Aid},
+                    success: function (res) {
+                        if (res.status) {
+                            location.reload();
+                        } else {
+                            console.log(res.error);
+                            $(e.target).parent().siblings('.error-msg-up-down').text(res.error);
+                            let timeCount1 = setTimeout(function () {
+                                $('.error-msg-up-down').empty();
+                                clearTimeout(timeCount1)
+                            }, 3000)
+                        }
+                    }
+                });
+                {% endif %}
+            });
+        }
+
+        //标签固定事件
+        function fixLeftNav() {
+            var $left_nav = $("#left-nav"),
+                $window = $(window),
+                offset = $left_nav.offset(),
+                topPadding = 70;
+            if ($window.width() > 977) {
+                $window.scroll(function () {
+                    if ($window.scrollTop() > offset.top) {
+                        $left_nav.stop().animate({
+                            marginTop: $window.scrollTop() - offset.top + topPadding
+                        });
+                    } //else {$left_nav.stop().animate({marginTop: 70});}
+                });
+            }
+        }
+
+        //跳转到评论下面
+        function turnToComment() {
+            var target_top = $("#comment").offset().top;
+            console.log(target_top, '执行');
+            //$("html,body").animate({scrollTop: target_top}, 1000);  //带滑动效果的跳转
+            $("html,body").scrollTop(target_top);
+        }
+
+        //图片大小调整
+        function adjustPictureSize() {
+            let contentBodyWidth = $("#article-content-inner-div").width();
+            let $img = $("#article_content").find('img');
+            $($img).each(function (index, imgobj) {
+                //console.log(this);
+                if ($(imgobj).width() > contentBodyWidth) {
+                    $(this).css('width', '100%');
+                }
+            })
+        }
+
+        //初始化问题评论
+        function initResponse() {
+            $.ajax({
+                url: COMMENT_URL,
+                type: 'GET',
+                dataType: 'JSON',
+                success: function (res) {
+                    if (res.status) {
+                        $.each(res.data, function (index, item) {
+                            showRecordItem(item);
+                        })
+                    }
+                }
+            })
+        }
+
+        //显示更新记录
+        function showRecordItem(dataDict) {
+            var $item = $("#conmentTemplate").find('.item').clone();
+            $item.find('pre').html(dataDict.content);
+            $item.find('.range-num').html(dataDict.num);
+            $item.find('.user').html(dataDict.creator);
+            $item.find('.comment-time').html(dataDict.create_datetime);
+
+            $item.attr({id: dataDict.id, username: dataDict.creator});
+
+            if (dataDict.parent_id) {
+                $('#' + dataDict.parent_id).children('.child').append($item);
+            } else {
+                $(".comment-list").append($item);
+            }
+        }
+
+        //评论回复按钮事件绑定
+        function bindRelyBtn() {
+            $(".comment-list").on('click', '.reply', function () {
+                var item = $(this).parent().parent();
+                console.log(item);
+                var id = item.attr('id');
+                var username = item.attr('username');
+                console.log(username);
+                $('#replyUser').removeClass('hide').attr(
+                    'parent-id', id
+                ).children('span').text('#' + id + '楼' + ' ' + username);
+            })
+        }
+
+        //取消回复对象
+        function bindCancelReplyUser() {
+            $('#replyUser').click(function () {
+                $(this).addClass('hide').removeAttr('parent-id').children('span').text("");
+            })
+        }
+
+        //评论提交按钮事件
+        function bindBtnSubmit() {
+            $("#btnReplySubmit").click(function () {
+                {% if not request.user.is_authenticated %}
+                    location.href='/login/';
+                {% endif %}
+                $("#commentText .error-msg").text("");
+                $.ajax({
+                    url: COMMENT_URL,
+                    type: "POST",
+                    data: {'content': $('#content').val(), 'parent': $('#replyUser').attr('parent-id')},
+                    dataType: 'JSON',
+                    success: function (res) {
+                        if (res.status) {
+                            showRecordItem(res.data);
+                            $('#content').val('');
+                            $('#replyUser').addClass('hide').removeAttr('parent-id').children('span').text('');
+                        } else
+                            $.each(res.error, function (key, value) {
+                                console.log(key, value[0]);
+                                $("#content").next('.error-msg').text(value[0]);
+                            })
+                    }
+                })
+            })
+        }
+    </script>
+{% endblock %}

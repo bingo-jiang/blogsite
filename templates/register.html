@@ -1,0 +1,95 @@
+{% extends 'mother_tmp/basic.html' %}
+{% load static %}
+{% block title %}我的博客--注册{% endblock %}
+{% block content %}
+    <div class="container-fluid" style="margin-top: 70px;">
+        <div class="col-md-4"></div>
+        <div class="col-md-4" style="border-radius: 5px;border: 1px solid #00a8c6">
+            <p style="font-size: 28px;text-align: center;color: #2b669a;">注册</p>
+            <form id="regForm" method="POST" novalidate>
+                {% csrf_token %}
+                <div class="form-group" style="text-align: center;">
+                    <label for="avatarFile">头像
+                        <img src="{% static 'img/default.jpg' %}" alt="默认头像"
+                             style="width: 80px;height: 80px;margin: 0 auto;" id="myImg">
+                    </label>
+                    <input type="file" id="avatarFile" name="avatar" style="display: none;">
+                    <span style="color: red;">{{ field.errors.0 }}</span>
+                </div>
+                {% for field in form %}
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        <div style="color: red;height: 20px;font-size: 14px;"></div>
+                    </div>
+                {% endfor %}
+                <a href="{% url 'login' %}" class="btn btn-primary" style="float: left;margin-bottom: 10px;">
+                    登录
+                </a>
+                <button id="btnRegister" type="button" class="btn btn-primary" style="float: right;margin-bottom: 10px;">
+                    注册
+                </button>
+            </form>
+        </div>
+        <div class="col-md-4"></div>
+    </div>
+    <div style="height: 50px;"></div>
+{% endblock %}
+{% block js %}
+    <script>
+        //头像预览
+        $("#avatarFile").change(function () {
+            //利用文件阅读器对象(内置)完成头像的预览
+            //1.生成一个文件阅读器对象
+            let fileReaderObj = new FileReader();
+            //2.获取用户上传的文件
+            let fileObj = $(this)[0].files[0];
+            //3.将文件对象给文件阅读器对象
+            fileReaderObj.readAsDataURL(fileObj);
+            //4.利用阅读器将文件展示到前端(修改src属性）,需要等图片加载才执行，onload
+            fileReaderObj.onload = function () {
+                $("#myImg").attr('src', fileReaderObj.result)
+            }
+        });
+        //注册按钮
+        $("#btnRegister").click(function () {
+            //因为包含文件对象，new一个formData
+            let formDataObj = new FormData();
+            //1.添加普通数据的键值对；
+            $.each($("#regForm").serializeArray(), function (index, obj) {
+                //console.log(index,obj)
+                formDataObj.append(obj.name, obj.value);
+            });
+            //2.添加文件对象;
+            formDataObj.append('avatar', $('#avatarFile')[0].files[0]);
+            console.log(formDataObj);
+            $.ajax({
+                url: "{% url 'register' %}",
+                data: formDataObj,
+                type: 'POST',
+                //需要指定一下两个关键参数，否则会报错
+                contentType: false,
+                processData: false,
+
+                dataType: 'JSON',
+                success: function (res) {
+                    if (res.status) {//成功
+                        location.href = res.data;
+                    } else {//失败
+                        console.log(res.error);
+                        $.each(res.error, function (key, value) {
+                            let $input=$("#id_" + key);
+                            $input.next().text(value[0]);
+                            $input.parent().addClass('has-error');
+                        });
+                    }
+                }
+            })
+        });
+    //
+    $('input').focus(function () {
+        $(this).next().text('').parent().removeClass('has-error');
+    })
+
+    </script>
+{% endblock %}

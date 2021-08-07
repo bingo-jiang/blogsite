@@ -1,0 +1,34 @@
+<div class="panel panel-primary">
+    <div class="panel-heading">
+        <h3 class="panel-title">文章分类</h3>
+    </div>
+    <div class="panel-body">
+        {% for item in category_obj %}
+            <p><a href="{% if request.user.is_authenticated %}/{{ user_obj.username }}/category/{{ item.2 }}{% else %}{% url 'login' %}{% endif %}">{{ item.0 }}({{ item.1 }})</a></p>
+        {% endfor %}
+    </div>
+</div>
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">文章标签</h3>
+    </div>
+    <div class="panel-body">
+        {% for item in tag_obj %}
+            <p><a href="{% if request.user.is_authenticated %}/{{ user_obj.username }}/tag/{{ item.2 }}{% else %}{% url 'login' %}{% endif %}">{{ item.0 }}({{ item.1 }})</a></p>
+        {% endfor %}
+    </div>
+</div>
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">日期归档</h3>
+    </div>
+    <div class="panel-body">
+        {% for item in sort_by_month_obj %}
+            <p>
+                <a href="{% if request.user.is_authenticated %}/{{ user_obj.username }}/archive/{{ item.0|date:'Y-m' }}{% else %}{% url 'login' %}{% endif %}">
+                    {{ item.0|date:'Y年m月' }}({{ item.1 }})
+                </a>
+            </p>
+        {% endfor %}
+    </div>
+</div>
