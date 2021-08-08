@@ -19,7 +19,7 @@
     <div class="container-fluid" style="margin-top: 70px;">
         <div class="col-md-2">
             {% load my_tag %}
-            {% left_menu user_obj.username %}
+            {% left_menu request user_obj.username %}
         </div>
         <div class="col-md-10">
             {% for item in object_list %}

@@ -6,7 +6,7 @@ register = template.Library()
 
 
 @register.inclusion_tag('tags/left_menu.html')
-def left_menu(username):
+def left_menu(request,username):
     # 构造侧边栏的数据
     user_obj = models.User.objects.filter(username=username).first()
     if user_obj:
